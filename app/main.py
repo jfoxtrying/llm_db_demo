@@ -74,9 +74,9 @@ def real_estate(limit: int = 100, db: Session = Depends(get_db)):
     return [dict(r._mapping) for r in rows]    # ← changed line
 
 # app/main.py
-from llm import call_llm
+from llm_layer import call_llm
 
-@app.post("/forecast/cap_rate/{project_id}")
+@app.api_route("/forecast/cap_rate/{project_id}", methods=["GET", "POST"])
 def cap_rate(project_id: str):
     payload = {
         "name": "get_cap_rate_forecast",
@@ -93,3 +93,4 @@ def cap_rate(project_id: str):
         }
     }
     return call_llm(payload)
+# Removed redundant decorator
