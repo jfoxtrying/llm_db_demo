@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+
+# Databases & caches
+*.db
+llm/llm_cache.db
+
+# Data files
+data/
+*.csv
+*.parquet
+
+# Secrets
+.env
+
+# macOS cruft
+.DS_Store
