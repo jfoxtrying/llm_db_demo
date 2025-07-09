@@ -1,0 +1,10 @@
+
+^X
+[theme]
+base        = "light"      # "dark" or "light"
+textColor   = "#212529"    # near-black
+primaryColor = "#2F6BFF"   # accent blue
+
+
+
+
