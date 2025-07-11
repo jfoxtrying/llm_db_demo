@@ -1,56 +1,44 @@
-# ui/streamlit_app.py
 import os, json, requests, streamlit as st
 
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8001")
+API_URL = os.getenv("API_URL", "http://127.0.0.1:8000")
 
-st.set_page_config(page_title="Your First-Year Analyst",
-                   layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Your First-Year Analyst", layout="wide")
+st.header("Your First-Year Analyst")
 
-st.markdown("<h2 style='font-weight:400;'>Your&nbsp;First-Year&nbsp;Analyst</h2>",
-            unsafe_allow_html=True)
-st.divider()
-
+# initialize history
 if "history" not in st.session_state:
     st.session_state.history = []
 
-def call_backend(question: str) -> str:
-    # Simple routing demo – expand with real intent detection later
-    if "cap rate" in question.lower():
+# display chat
+for role, msg in st.session_state.history:
+    with st.chat_message(role):
+        st.write(msg)
+
+# get new user prompt
+if prompt := st.chat_input("Ask me anything…"):
+    # record the user message
+    st.session_state.history.append(("user", prompt))
+
+    # call your backend
+    if "cap rate" in prompt.lower():
         r = requests.get(f"{API_URL}/forecast/cap_rate/probandt")
         data = r.json()
-        return f"Forecast cap rates: {data['caps']}"
+        reply = f"Forecast cap rates: {data['caps']}"
     else:
-        return "Sorry, I only know cap rates as of right now!"
+        # fallback to NLQ endpoint if you wire it up
+        payload = {"question": prompt, "table": "real_estate_mock"}
+        r = requests.post(f"{API_URL}/nlq/", json=payload, timeout=30)
+        if r.ok:
+            rows = r.json().get("rows", [])
+            if rows:
+                # show as table in the reply bubble
+                with st.chat_message("assistant"):
+                    st.dataframe(rows, use_container_width=True)
+                reply = None
+            else:
+                reply = "I got no rows back."
+        else:
+            reply = f"Error: {r.text}"
 
-prompt = st.chat_input("Ask me anything…")
-if prompt:
-    st.session_state.history.append(("user", prompt))
-    answer = call_backend(prompt)
-    st.session_state.history.append(("bot", answer))
-
-for role, text in st.session_state.history:
-    align = "flex-start" if role == "bot" else "flex-end"
-    st.markdown(
-        f"<div style='display:flex; justify-content:{align}; "
-        f"margin:4px 0;'><div style='background:#f5f5f5; "
-        f"border-radius:8px; padding:8px 12px; "
-        f"max-width:60ch;'>{text}</div></div>",
-        unsafe_allow_html=True
-    )
-# Streamlit theme configuration can be set in the `.streamlit/config.toml` file.
-# Remove this block as it is misplaced in the Python code.
-    # The import statements are already present at the top of the file.
-    # You can safely remove this redundant import block.
-
-API_URL = os.getenv("API_URL", "http://127.0.0.1:8001")
-
-def fetch_notes():
-    try:
-        return requests.get(f"{API_URL}/notes").json()
-    except Exception as e:
-        st.error(f"API error: {e}")
-        return []
-
-if st.button("Show notes"):
-    notes = fetch_notes()
-    st.table(notes)
+    if reply:
+        st.session_state.history.append(("assistant", reply))

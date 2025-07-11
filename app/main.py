@@ -9,6 +9,13 @@ from sqlalchemy.sql import text
 
 from app.models import Note                     # ← SQLAlchemy model
 
+from app.endpoints.mc_endpoint import router as mc_router
+app = FastAPI(title="LLM-Demo FOR WORK")
+app.include_router(mc_router)
+
+from app.endpoints.nlq import router as nlq_router
+app.include_router(nlq_router)
+
 # ────────────────────────────────────
 #  Pydantic request / response models
 # ────────────────────────────────────
@@ -46,7 +53,6 @@ def get_db() -> Generator[Session, None, None]:
 # ──────────────────────────────
 #  FastAPI app + endpoints
 # ──────────────────────────────
-app = FastAPI(title="LLM-Demo FOR WORK")
 
 
 @app.get("/notes", response_model=list[NoteOut])
